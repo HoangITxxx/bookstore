@@ -3,6 +3,7 @@ package com.bookstore.utils;
 import com.bookstore.services.CustomUserDetailServices;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,18 +13,20 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    @Bean
-    public UserDetailsService userDetailsService(){
-        return new CustomUserDetailServices();
 
-    }
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public UserDetailsService userDetailsService() {
+        return new CustomUserDetailServices();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -36,23 +39,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AccessDeniedHandler customAccessDeniedHandler(){
+    public AccessDeniedHandler customAccessDeniedHandler() {
         return (request, response, accessDeniedException)
-                -> response.sendRedirect(request.getContextPath()+"/error/403");
+                -> response.sendRedirect(request.getContextPath() + "/error/403");
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws
-            Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers( "/css/**", "/js/**", "/", "/register",
-                                "/error")
-                        .permitAll()
-                        .requestMatchers( "/books/edit", "/books/delete")
-                        .authenticated()
-                        .requestMatchers("/books", "/books/add")
-                        .authenticated()
+                        .requestMatchers("/css/**", "/js/**", "/", "/register", "/error").permitAll()
+                        .requestMatchers("/books/edit", "/books/delete").authenticated()
+                        .requestMatchers("/books", "/books/add").authenticated()
                         .anyRequest().authenticated()
                 )
                 .logout(logout -> logout.logoutUrl("/logout")
@@ -67,12 +65,22 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/")
                         .permitAll()
                 )
-                .rememberMe(rememberMe -> rememberMe.key("uniqueAndSecret")
-                        .tokenValiditySeconds(86400)
-                        .userDetailsService(userDetailsService())
+                .oauth2Login(oauth2Login -> oauth2Login
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/")
                 )
                 .exceptionHandling(exceptionHandling ->
-                        exceptionHandling.accessDeniedHandler(customAccessDeniedHandler()))
+                        exceptionHandling
+                                .accessDeniedHandler(customAccessDeniedHandler())
+                                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                                .accessDeniedPage("/error/403")
+                                .authenticationEntryPoint((request, response, authException) -> response.sendRedirect("/error/401"))
+                                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.NOT_FOUND))
+                                .accessDeniedPage("/error/404")
+                                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.INTERNAL_SERVER_ERROR))
+                                .accessDeniedPage("/error/500")
+                )
                 .build();
     }
+
 }

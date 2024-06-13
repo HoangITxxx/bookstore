@@ -11,4 +11,19 @@ public class ErrorController {
     public String accessDenied(){
         return "error/403";
     }
+
+    @GetMapping("/400")
+    public String BadRequest(){
+        return "error/400";
+    }
+
+    @GetMapping("/404")
+    public String PageNotFound(){
+        return "error/404";
+    }
+
+    @GetMapping("/500")
+    public String InternalServerError(){
+        return "error/500";
+    }
 }

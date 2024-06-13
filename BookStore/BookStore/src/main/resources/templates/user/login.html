@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="Viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập</title>
     <th:block th:replace="~{layout::link-css}"></th:block>
 </head>
@@ -16,10 +16,10 @@
             <h3 class="card-title text-center">ĐĂNG NHẬP</h3>
             <form th:action="@{/login}" method="post">
                 <fieldset>
-                    <div th:if ="${param.error}" class="alert alert-danger">
+                    <div th:if="${param.error}" class="alert alert-danger">
                         Tên đăng nhập và mật khẩu không hợp lệ
                     </div>
-                    <div th:if ="${param.logout}" class="alert alert-success">
+                    <div th:if="${param.logout}" class="alert alert-success">
                         Bạn đã đăng xuất
                     </div>
                     <div class="mb-3">
@@ -40,6 +40,9 @@
                     </div>
                 </fieldset>
             </form>
+            <div class="text-center">
+                <a href="/oauth2/authorization/google" class="btn btn-danger">Login with Google</a>
+            </div>
         </div>
     </div>
 </div>
